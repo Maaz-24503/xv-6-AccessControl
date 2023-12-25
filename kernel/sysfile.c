@@ -53,6 +53,38 @@ fdalloc(struct file *f)
 
 // TODO: create access kernel function(s)
 
+//mode -> 0 means read, 1 means write, 2 means execute
+int
+access(char *path, int mode){
+  struct proc *myProc = myproc();
+  struct inode *ip = namei(path);
+  
+  printf("yeyeye\n");
+  if(mode == 0){
+    if(((ip->mode)&S_IROTH)!=0) return 1;
+    if((ip->gid==myProc->gid)&&((ip->mode)&S_IRGRP)!=0) return 1;
+    if((ip->uid==myProc->uid)&&((ip->mode)&S_IRUSR)!=0) return 1;
+  }
+
+  else if(mode == 1){
+    if(((ip->mode)&S_IWOTH)!=0) return 1;
+    if((ip->gid==myProc->gid)&&((ip->mode)&S_IWGRP)!=0) return 1;
+    if((ip->uid==myProc->uid)&&((ip->mode)&S_IWUSR)!=0) return 1;
+  }
+  
+  else if(mode == 2){
+    if(((ip->mode)&S_IXOTH)!=0) return 1;
+    if((ip->gid==myProc->gid)&&((ip->mode)&S_IXGRP)!=0) return 1;
+    if((ip->uid==myProc->uid)&&((ip->mode)&S_IXUSR)!=0) return 1;
+  }
+
+  else{
+    return -1;
+  }
+
+  return -1;
+}
+
 uint64
 sys_dup(void)
 {
@@ -261,6 +293,9 @@ create(char *path, short type, short major, short minor)
   ilock(dp);
 
   // TODO: authorize access for `dp`
+  // int permission = access("", 1);
+  // printf("\n%d\n", permission);
+  // if(permission < 0) return -1;
 
   if((ip = dirlookup(dp, name, 0)) != 0){
     iunlockput(dp);
@@ -282,6 +317,9 @@ create(char *path, short type, short major, short minor)
   ip->nlink = 1;
 
   // TODO: implement default file creation ownership and mode
+  ip->uid = myproc()->uid;
+  ip->gid = myproc()->gid;
+  ip->mode = S_IRWXU | S_IRGRP | S_IWGRP | S_IROTH;
 
   iupdate(ip);
 
