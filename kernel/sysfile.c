@@ -525,6 +525,45 @@ sys_pipe(void)
 }
 
 
-// TODO: write a chmod system call
-
 // TODO: write a chown system call
+
+uint64
+sys_chown(void){
+  char path[MAXPATH];
+  int uid, gid;
+  struct proc *currProc = myproc();
+  argint(1, &uid);
+  argint(2, &gid);
+  if (argstr(0, path, MAXPATH) < 0 || uid < 0) {
+    return -1;  // Error in argument parsing
+  }
+  // printf("getting here 1\n");
+  struct inode *ip = namei(path);
+  // printf("getting here 2\n");
+  if(ip == 0) return -1;
+  if(currProc->uid !=0 && currProc->uid != ip->uid) return -1;
+  ip->uid = uid;
+  ip->gid = gid;
+  return 1;
+}
+
+// TODO: write a chmod system call
+uint64
+sys_chmod(void){
+  char path[MAXPATH];
+  int mode;
+  struct proc *currProc = myproc();
+  argint(1, &mode);
+  if (argstr(0, path, MAXPATH) < 0 || mode < 0) {
+    return -1;  // Error in argument parsing
+  }
+
+  struct inode *ip = namei(path);
+  if(ip == 0) return -1;
+
+  if(currProc->uid !=0 && currProc->uid != ip->uid) return -1;
+
+  ip->mode = mode;
+
+  return 1;
+}

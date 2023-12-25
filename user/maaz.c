@@ -14,5 +14,8 @@ int main(){
     setuid(12);
     temp = getuid();
     printf("%d\n", temp);
+    int check1 = chown("", 0,0);
+    int check2 = chmod("",S_IRWXU);
+    printf("%d  %d\n", check1, check2);
     return 0;
 }
